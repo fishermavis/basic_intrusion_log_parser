@@ -1,4 +1,4 @@
-# Android Log Parser to CSV
+# Android Intrusion Log Parser to CSV
 
 A resilient, command-line Python utility designed to parse highly dynamic Android log datasets stored as row-by-row JSON records within `.txt` files. This script automatically crawls an entire directory, normalizes disparate network and system events into a unified data structure, and merges them into a clean, review-ready CSV spreadsheet.
 
