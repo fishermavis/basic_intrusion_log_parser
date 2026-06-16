@@ -50,5 +50,4 @@ parser/
 
 Sample command for the above:
 
-```text
 python parse_intrusion_logs.py -o output.csv
