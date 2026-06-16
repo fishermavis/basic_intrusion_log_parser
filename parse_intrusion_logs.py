@@ -5,6 +5,7 @@ import os
 import sys
 from datetime import datetime, timezone
 import glob
+from collections import Counter
 
 
 def decode_timestamp(epoch):
@@ -30,7 +31,6 @@ def parse_directory_to_csv(input_dir, output_file):
         print(f"Error: The directory '{input_dir}' does not exist.", file=sys.stderr)
         sys.exit(1)
 
-    # Updated to specifically search for .txt files
     file_pattern = os.path.join(input_dir, "*.txt")
     files_to_process = glob.glob(file_pattern)
 
@@ -53,6 +53,10 @@ def parse_directory_to_csv(input_dir, output_file):
     ]
 
     total_row_count = 0
+    
+    # Trackers for our new feature analytics
+    ip_counter = Counter()
+    process_counter = Counter()
 
     try:
         with open(output_file, "w", newline="", encoding="utf-8") as outfile:
@@ -74,7 +78,6 @@ def parse_directory_to_csv(input_dir, output_file):
                             if not data:
                                 continue
 
-                            # Extract event details dynamically
                             event_type = list(data.keys())[0]
                             event = data[event_type]
 
@@ -92,16 +95,23 @@ def parse_directory_to_csv(input_dir, output_file):
                                 "extra_details": "",
                             }
 
-                            # --- Dynamic Parser Block ---
+                            # --- Dynamic Parser & Analytics Collector Block ---
                             if event_type == "dns_event":
                                 ips = [ip.lstrip("/") for ip in event.get("ip_addresses", [])]
                                 row_data["hostname"] = event.get("hostname", "")
                                 row_data["ip_addresses"] = ", ".join(ips)
+                                
+                                # Populate IP analytics (handles multi-IP lists)
+                                for ip in ips:
+                                    if ip: ip_counter[ip] += 1
 
                             elif event_type == "connect_event":
                                 ip = event.get("ip_address", "").lstrip("/")
                                 row_data["ip_addresses"] = ip
                                 row_data["port"] = event.get("port", "")
+                                
+                                # Populate IP analytics (single IP string)
+                                if ip: ip_counter[ip] += 1
 
                             elif event_type == "security_event":
                                 details = {}
@@ -119,6 +129,11 @@ def parse_directory_to_csv(input_dir, output_file):
                                 leftovers = {k: v for k, v in event.items() if k not in ["event_id", "event_time"]}
                                 row_data["extra_details"] = json.dumps(leftovers)
 
+                            # Populate Process/Package analytics
+                            pkg_proc = row_data["package_or_process"]
+                            if pkg_proc:
+                                process_counter[pkg_proc] += 1
+
                             writer.writerow(row_data)
                             total_row_count += 1
 
@@ -128,15 +143,58 @@ def parse_directory_to_csv(input_dir, output_file):
                             print(f"    Warning: Error in {filename} on line {line_num}: {e}", file=sys.stderr)
 
             print(f"\nSuccess! Processed {total_row_count} total events and saved them to '{output_file}'.")
+            
+            # Run and output the summary analytics
+            generate_summary_report(output_file, ip_counter, process_counter)
 
     except IOError as e:
         print(f"Error handling files: {e}", file=sys.stderr)
         sys.exit(1)
 
 
+def generate_summary_report(master_csv_path, ip_counts, process_counts):
+    """Compiles unique frequencies and saves them to an analytics text file."""
+    # Determine summary filename based on output CSV name
+    base_dir = os.path.dirname(master_csv_path)
+    summary_filename = "security_summary.txt"
+    if base_dir:
+        summary_path = os.path.join(base_dir, summary_filename)
+    else:
+        summary_path = summary_filename
+
+    print(f"Generating automated analytics report at '{summary_path}'...")
+
+    with open(summary_path, "w", encoding="utf-8") as report:
+        report.write("==================================================\n")
+        report.write("        ANDROID INTRUSION LOG ANALYTICS          \n")
+        report.write(f"        Generated on: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
+        report.write("==================================================\n\n")
+
+        # 1. IP Frequency Report
+        report.write("📊 [1/2] DESTINATION IP ADDRESS FREQUENCY\n")
+        report.write("--------------------------------------------------\n")
+        report.write(f"Total Unique IPs Discovered: {len(ip_counts)}\n\n")
+        report.write(f"{'IP Address':<20} | {'Occurrences / Hits':<15}\n")
+        report.write("-" * 50 + "\n")
+        for ip, count in ip_counts.most_common():
+            report.write(f"{ip:<20} | {count:<15}\n")
+        report.write("\n\n")
+
+        # 2. Process / Package Frequency Report
+        report.write("📱 [2/2] PACKAGE / PROCESS ACTIVITY FREQUENCY\n")
+        report.write("--------------------------------------------------\n")
+        report.write(f"Total Unique Processes Discovered: {len(process_counts)}\n\n")
+        report.write(f"{'Package or Process Name':<50} | {'Total Events':<15}\n")
+        report.write("-" * 72 + "\n")
+        for proc, count in process_counts.most_common():
+            report.write(f"{proc:<50} | {count:<15}\n")
+        
+    print("Analytics extraction complete!")
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Batch convert a folder of Android .txt log files into a single unified CSV."
+        description="Batch convert Android logs and auto-analyze unique IP/Process frequencies."
     )
     parser.add_argument(
         "input_directory",
