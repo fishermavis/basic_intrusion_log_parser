@@ -10,7 +10,7 @@ The JSON data parsed by this script consists of security and connection telemetr
 2. Tap **Security & privacy**.
 3. Tap **Advanced Protection**.
 4. Tap **Intrusion Logging**.
-5. Tap **Access logs** to view, manage, and download the logs onto your machine as `.txt` files.
+5. Tap **Access logs** to view, manage, and download the logs onto your machine as `.zip` file containing `.txt` logs.
 
 ---
 
