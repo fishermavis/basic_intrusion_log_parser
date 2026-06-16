@@ -39,10 +39,16 @@ Place your downloaded text files containing the row-by-row JSON entries inside a
 
 Your directory structure should look something like this:
 ```text
-my-log-parser/
-├── batch_parse_logs.py
-├── README.md
+parser/
+├── parse_intrusion_logs.py
 └── logs_folder/
-    ├── network_traffic_day1.txt
-    ├── security_audit_day1.txt
-    └── system_events_day2.txt
+    ├── 2016-06-16(1).txt
+    ├── 2016-06-16(2).txt
+    ├── 2016-06-16(3).txt
+    ├── 2016-06-16(4).txt
+    └── 2016-06-16.txt
+
+Sample command for the above:
+
+```text
+python parse_intrusion_logs.py -o output.csv
