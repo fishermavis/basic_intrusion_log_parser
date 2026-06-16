@@ -51,3 +51,7 @@ parser/
 Sample command for the above:
 
 python parse_intrusion_logs.py -o output.csv
+
+Update 1 16/06/2026:
+
+Script will now produce a unique list of app names, IP addresses and counts for each item in a file named 'security_summary.txt'
