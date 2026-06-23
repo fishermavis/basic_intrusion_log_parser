@@ -100,7 +100,7 @@ Timestamp                | Source Log File           | Line  | Blacklisted App P
 
 🔒 [SECURITY INSIGHTS] PHYSICAL AUTHENTICATION FAILURES
 --------------------------------------------------
-Total Intrusive Unlock Failures Identified: 1
+Total Intrusive Unlock Failures Identified: 2
 
 Timestamp                | Source Log File           | Line  | Decoded Attack Context
 -------------------------------------------------------------------------------------------------------------------
